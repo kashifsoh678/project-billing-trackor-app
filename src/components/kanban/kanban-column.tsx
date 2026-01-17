@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { Droppable } from '@hello-pangea/dnd'
-import { cn } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
 interface KanbanColumnProps {
     id: string

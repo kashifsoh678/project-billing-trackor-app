@@ -141,7 +141,7 @@ export default function ProjectDetailsPage({ params }: { params: { id: string } 
             <Modal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
-                title="Log Time Entry"
+                title="Add Time Log"
             >
                 <TimeLogForm
                     onSubmit={handleAddLog}

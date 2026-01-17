@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
-import { cn } from './button'
-import { Eye, EyeOff } from 'lucide-react'
+import { Eye, EyeOff, Calendar } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
     label?: string
@@ -18,14 +18,15 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
                 {label && (
                     <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                         {label}
+                        {props.required && <span className="text-destructive ml-1">*</span>}
                     </label>
                 )}
                 <div className="relative">
                     <input
                         type={inputType}
                         className={cn(
-                            'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 mt-1 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground  disabled:cursor-not-allowed disabled:opacity-50',
-                            isPassword && 'pr-10',
+                            'flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 mt-1 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground  disabled:cursor-not-allowed disabled:opacity-50',
+                            (isPassword || type === 'date') && 'pr-10',
                             error && 'border-destructive',
                             className
                         )}
@@ -39,6 +40,20 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
                             className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none transition-colors"
                         >
                             {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </button>
+                    )}
+                    {type === 'date' && (
+                        <button
+                            type="button"
+                            onClick={(e) => {
+                                const input = e.currentTarget.parentElement?.querySelector('input')
+                                if (input && 'showPicker' in input) {
+                                    (input as HTMLInputElement).showPicker()
+                                }
+                            }}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none transition-colors"
+                        >
+                            <Calendar size={18} />
                         </button>
                     )}
                 </div>

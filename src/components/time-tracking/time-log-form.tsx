@@ -1,12 +1,11 @@
 'use client'
 
-import React from 'react'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import * as z from 'zod'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Textarea } from '@/components/ui/textarea'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useForm } from 'react-hook-form'
+import * as z from 'zod'
 
 const timeLogSchema = z.object({
     hours: z.coerce
@@ -53,63 +52,61 @@ const TimeLogForm = ({ initialData, onSubmit, onCancel }: TimeLogFormProps) => {
     }
 
     return (
-        <Card className="w-full">
-            <CardHeader>
-                <CardTitle>{initialData ? 'Edit Time Log' : 'Add Time Log'}</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                        <Input
-                            label="Hours"
-                            type="number"
-                            step="0.1"
-                            error={errors.hours?.message}
-                            {...register('hours')}
-                        />
-                        <Input
-                            label="Date"
-                            type="date"
-                            error={errors.log_date?.message}
-                            {...register('log_date')}
-                        />
-                    </div>
 
-                    <Input
-                        label="Notes"
-                        placeholder="Describe your work..."
-                        error={errors.notes?.message}
-                        {...register('notes')}
-                    />
+        <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+                <Input
+                    label="Hours"
+                    type="number"
+                    step="0.1"
+                    error={errors.hours?.message}
+                    required
+                    {...register('hours')}
+                />
+                <Input
+                    label="Date"
+                    type="date"
+                    error={errors.log_date?.message}
+                    required
+                    {...register('log_date')}
+                />
+            </div>
 
-                    <div className="space-y-1.5">
-                        <label className="text-sm font-medium leading-none">Status</label>
-                        <select
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 mt-1"
-                            {...register('status')}
-                        >
-                            <option value="todo">Todo</option>
-                            <option value="in-progress">In Progress</option>
-                            <option value="done">Done</option>
-                        </select>
-                        {errors.status && (
-                            <p className="text-xs font-medium text-destructive">{errors.status.message}</p>
-                        )}
-                    </div>
+            <Textarea
+                label="Notes"
+                placeholder="Describe your work..."
+                error={errors.notes?.message}
+                required
+                {...register('notes')}
+            />
 
-                    <div className="flex gap-3 justify-end pt-2">
-                        {onCancel && (
-                            <Button type="button" variant="outline" onClick={onCancel}>
-                                Cancel
-                            </Button>
-                        )}
-                        <Button type="submit" disabled={isSubmitting}>
-                            {initialData ? 'Update Log' : 'Save Log'}
-                        </Button>
-                    </div>
-                </form>
-            </CardContent>
-        </Card>
+            <div className="space-y-1.5">
+                <label className="text-sm font-medium leading-none">Status</label>
+                <select
+                    className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 mt-1"
+                    {...register('status')}
+                >
+                    <option value="todo">Todo</option>
+                    <option value="in-progress">In Progress</option>
+                    <option value="done">Done</option>
+                </select>
+                {errors.status && (
+                    <p className="text-xs font-medium text-destructive">{errors.status.message}</p>
+                )}
+            </div>
+
+            <div className="flex gap-3 justify-end pt-2">
+                {onCancel && (
+                    <Button type="button" size='sm' variant="outline" onClick={onCancel}>
+                        Cancel
+                    </Button>
+                )}
+                <Button type="submit" size='sm' disabled={isSubmitting}>
+                    {initialData ? 'Update Log' : 'Save Log'}
+                </Button>
+            </div>
+        </form>
+
     )
 }
 
