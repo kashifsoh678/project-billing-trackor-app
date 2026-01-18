@@ -9,22 +9,18 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card'
 import { LogIn } from 'lucide-react'
-
-const loginSchema = z.object({
-    email: z.string().email('Invalid email address'),
-    password: z
-        .string()
-        .min(8, 'Password must be at least 8 characters')
-        .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
-        .regex(/[0-9]/, 'Password must contain at least one number'),
-})
+import { useAuth } from '@/context/auth-context'
+import { loginSchema } from '@/lib/validators'
+import { toast } from 'react-hot-toast'
 
 type LoginFormValues = z.infer<typeof loginSchema>
 
 const LoginPage: React.FC = () => {
+    const { login } = useAuth()
     const {
         register,
         handleSubmit,
+        setError,
         formState: { errors, isSubmitting },
     } = useForm<LoginFormValues>({
         resolver: zodResolver(loginSchema),
@@ -32,7 +28,15 @@ const LoginPage: React.FC = () => {
     })
 
     const onSubmit = async (data: LoginFormValues) => {
-        console.log('Login data:', data)
+        try {
+            await login(data)
+            toast.success('Login successful! Welcome back.')
+        } catch (error) {
+            const apiError = error as { response?: { data?: { error?: string } } };
+            const message = apiError.response?.data?.error || 'Login failed. Please check your credentials.';
+            toast.error(message);
+            setError('root', { message });
+        }
     }
 
     return (

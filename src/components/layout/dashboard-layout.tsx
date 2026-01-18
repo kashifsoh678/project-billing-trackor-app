@@ -1,11 +1,10 @@
 'use client'
 
-import React, { ReactNode } from 'react'
+import { cn } from '@/lib/utils'
+import { FolderKanban, LayoutDashboard } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { FolderKanban, LayoutDashboard, LogOut } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
+import React, { ReactNode } from 'react'
 import Navbar from './navbar'
 
 const SidebarItem = ({
@@ -70,12 +69,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                     ))}
                 </div>
 
-                <div className="p-4 border-t border-border">
-                    <Button variant="ghost" className="w-full justify-start gap-3 text-destructive hover:text-destructive hover:bg-destructive/10">
-                        <LogOut size={20} />
-                        <span>Sign Out</span>
-                    </Button>
-                </div>
+
             </aside>
 
             {/* Main Content */}

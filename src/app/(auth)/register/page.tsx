@@ -9,37 +9,34 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card'
 import { UserPlus } from 'lucide-react'
+import { useAuth } from '@/context/auth-context'
+import { registerSchema } from '@/lib/validators'
+import { toast } from 'react-hot-toast'
 
-const signupSchema = z
-    .object({
-        name: z.string().min(2, 'Name must be at least 2 characters'),
-        email: z.string().email('Invalid email address'),
-        password: z
-            .string()
-            .min(8, 'Password must be at least 8 characters')
-            .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
-            .regex(/[0-9]/, 'Password must contain at least one number'),
-        confirmPassword: z.string().min(8, 'Please confirm your password'),
-    })
-    .refine((data) => data.password === data.confirmPassword, {
-        message: "Passwords don't match",
-        path: ['confirmPassword'],
-    })
-
-type SignupFormValues = z.infer<typeof signupSchema>
+type SignupFormValues = z.infer<typeof registerSchema>
 
 const SignupPage: React.FC = () => {
+    const { register: registerUser } = useAuth()
     const {
         register,
         handleSubmit,
+        setError,
         formState: { errors, isSubmitting },
     } = useForm<SignupFormValues>({
-        resolver: zodResolver(signupSchema),
+        resolver: zodResolver(registerSchema),
         mode: 'onChange',
     })
 
     const onSubmit = async (data: SignupFormValues) => {
-        console.log('Signup data:', data)
+        try {
+            await registerUser(data)
+            toast.success('Registration successful! Please sign in.')
+        } catch (error) {
+            const apiError = error as { response?: { data?: { error?: string } } };
+            const message = apiError.response?.data?.error || 'Registration failed. Please try again.';
+            toast.error(message);
+            setError('root', { message });
+        }
     }
 
     return (

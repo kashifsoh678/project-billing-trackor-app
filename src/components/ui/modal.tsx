@@ -1,56 +1,76 @@
-'use client'
+'use client';
 
-import React, { useEffect } from 'react'
-import { X } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from './card'
+import React, { useEffect } from 'react';
+import { X } from 'lucide-react';
+import { Button } from './button';
 
 interface ModalProps {
-    isOpen: boolean
-    onClose: () => void
-    title: string
-    children: React.ReactNode
+    isOpen: boolean;
+    onClose: () => void;
+    title: string;
+    children: React.ReactNode;
+    footer?: React.ReactNode;
 }
 
-const Modal = ({ isOpen, onClose, title, children }: ModalProps) => {
-
+const Modal: React.FC<ModalProps> = ({
+    isOpen,
+    onClose,
+    title,
+    children,
+    footer
+}) => {
+    // Close on escape key
     useEffect(() => {
-        const handleEscape = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') onClose()
-        }
+        const handleEsc = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') onClose();
+        };
         if (isOpen) {
-            document.addEventListener('keydown', handleEscape)
-            document.body.style.overflow = 'hidden'
+            window.addEventListener('keydown', handleEsc);
+            document.body.style.overflow = 'hidden';
         }
         return () => {
-            document.removeEventListener('keydown', handleEscape)
-            document.body.style.overflow = 'unset'
-        }
-    }, [isOpen, onClose])
+            window.removeEventListener('keydown', handleEsc);
+            document.body.style.overflow = 'unset';
+        };
+    }, [isOpen, onClose]);
 
-    if (!isOpen) return null
+    if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-            <Card className="relative w-full max-w-lg rounded-xl shadow-lg border border-border animate-in zoom-in-95 duration-200"
-                role="dialog"
-                aria-modal="true"
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+            <div
+                className="bg-card w-full max-w-lg rounded-2xl border border-white/10 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
+                onClick={(e) => e.stopPropagation()}
             >
-                <CardHeader className='p-6 border-b border-border'>
-                    <CardTitle className='text-lg font-semibold flex items-center justify-between   '>
-                        {title}
-                        <Button variant="ghost" size="sm" onClick={onClose} className="h-6 w-6 p-0">
-                            <X size={18} />
-                        </Button>
-                    </CardTitle>
-                </CardHeader>
+                {/* Header */}
+                <div className="flex items-center justify-between p-6 border-b">
+                    <h2 className="text-xl font-bold">{title}</h2>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={onClose}
+                        className="p-1 h-auto rounded-full hover:bg-white/10"
+                    >
+                        <X size={20} />
+                    </Button>
+                </div>
 
-                <CardContent className='p-6'>
+                {/* Content */}
+                <div className="p-6">
                     {children}
-                </CardContent>
-            </Card>
-        </div>
-    )
-}
+                </div>
 
-export default Modal
+                {/* Footer */}
+                {footer && (
+                    <div className="flex items-center justify-end gap-3 p-4  bg-white/5 border-t">
+                        {footer}
+                    </div>
+                )}
+            </div>
+            {/* Backdrop click to close */}
+            <div className="absolute inset-0 -z-10" onClick={onClose} />
+        </div>
+    );
+};
+
+export default Modal;
