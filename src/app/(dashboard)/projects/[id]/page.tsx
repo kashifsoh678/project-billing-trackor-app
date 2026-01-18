@@ -207,7 +207,6 @@ export default function ProjectDetailsPage({ params }: { params: { id: string } 
                         setIsModalOpen(false)
                         setEditingLog(null)
                     }}
-                    onDelete={handleDeleteLog}
                 />
             </Modal>
         </div>

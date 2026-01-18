@@ -6,7 +6,6 @@ import { Textarea } from '@/components/ui/textarea'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import * as z from 'zod'
-import { TimeLog } from '../kanban/kanban-board'
 
 const timeLogSchema = z.object({
     hours: z.coerce
@@ -26,10 +25,9 @@ interface TimeLogFormProps {
     initialData?: TimeLogFormValues
     onSubmit: (data: TimeLogFormValues) => void
     onCancel?: () => void
-    onDelete: (log: TimeLog) => void
 }
 
-const TimeLogForm = ({ initialData, onSubmit, onCancel, onDelete }: TimeLogFormProps) => {
+const TimeLogForm = ({ initialData, onSubmit, onCancel }: TimeLogFormProps) => {
     const {
         register,
         handleSubmit,
@@ -101,11 +99,6 @@ const TimeLogForm = ({ initialData, onSubmit, onCancel, onDelete }: TimeLogFormP
                 {onCancel && (
                     <Button type="button" size='sm' variant="outline" onClick={onCancel}>
                         Cancel
-                    </Button>
-                )}
-                {initialData && onDelete && (
-                    <Button type="button" size='sm' variant="destructive" onClick={() => onDelete(initialData as TimeLog)}>
-                        Delete
                     </Button>
                 )}
                 <Button type="submit" size='sm' disabled={isSubmitting}>

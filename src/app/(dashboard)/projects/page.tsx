@@ -104,8 +104,21 @@ export default function ProjectsPage() {
         }
     }
 
+    const [currentPage, setCurrentPage] = useState(1)
+    const ITEMS_PER_PAGE = 4
+
+    const totalPages = Math.ceil(projects.length / ITEMS_PER_PAGE)
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
+    const currentProjects = projects.slice(startIndex, startIndex + ITEMS_PER_PAGE)
+
+    const handlePageChange = (newPage: number) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+            setCurrentPage(newPage)
+        }
+    }
+
     return (
-        <div className="space-y-8">
+        <div className="space-y-8 h-full">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Projects</h1>
@@ -125,16 +138,43 @@ export default function ProjectsPage() {
                 </Button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {projects.map((project) => (
-                    <ProjectCard
-                        key={project.id}
-                        project={project}
-                        onEdit={handleEditProject}
-                        onArchive={handleArchiveProject}
-                    />
-                ))}
+            <div className='flex flex-col justify-between'>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {currentProjects.map((project) => (
+                        <ProjectCard
+                            key={project.id}
+                            project={project}
+                            onEdit={handleEditProject}
+                            onArchive={handleArchiveProject}
+                        />
+                    ))}
+                </div>
+
+                {totalPages > 1 && (
+                    <div className="flex items-center justify-end gap-2 mt-4">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handlePageChange(currentPage - 1)}
+                            disabled={currentPage === 1}
+                        >
+                            Previous
+                        </Button>
+                        <span className="text-sm font-medium mx-2">
+                            Page {currentPage} of {totalPages}
+                        </span>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handlePageChange(currentPage + 1)}
+                            disabled={currentPage === totalPages}
+                        >
+                            Next
+                        </Button>
+                    </div>
+                )}
             </div>
+
 
             <Modal
                 isOpen={isModalOpen}

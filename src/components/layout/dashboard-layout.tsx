@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import { FolderKanban, LayoutDashboard, LogOut, Menu } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import Navbar from './navbar'
 
 const SidebarItem = ({
     icon: Icon,
@@ -79,13 +80,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
             {/* Main Content */}
             <main className="flex-1 md:ml-64 min-h-screen flex flex-col">
-                {/* Mobile Header */}
-                <header className="md:hidden h-16 flex items-center px-4 border-b border-border bg-card">
-                    <Button variant="ghost" size="sm" className="-ml-2">
-                        <Menu size={24} />
-                    </Button>
-                    <span className="ml-2 text-lg font-bold">BillTrack</span>
-                </header>
+                <Navbar />
 
                 <div className="flex-1 p-6 md:p-8 overflow-y-auto">
                     {children}
