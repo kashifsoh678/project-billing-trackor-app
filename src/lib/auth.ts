@@ -1,12 +1,9 @@
-import { Role } from "@prisma/client";
+import { Role } from "@/types";
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
-import { compare, hash } from "bcrypt";
-
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || "default-secret-change-me",
 );
-const SALT_ROUNDS = 10;
 
 /**
  * JWT Payload structure
@@ -15,23 +12,6 @@ export interface JWTPayload {
   userId: string;
   email: string;
   role: Role;
-}
-
-/**
- * Hash password using bcrypt
- */
-export async function hashPassword(password: string): Promise<string> {
-  return hash(password, SALT_ROUNDS);
-}
-
-/**
- * Verify password against hash
- */
-export async function verifyPassword(
-  password: string,
-  hash: string,
-): Promise<boolean> {
-  return compare(password, hash);
 }
 
 /**

@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { loginSchema } from "@/lib/validators";
-import { generateToken, setAuthCookie, verifyPassword } from "@/lib/auth";
+import { generateToken, setAuthCookie } from "@/lib/auth";
+import { verifyPassword } from "@/lib/password";
+import { Role } from "@/types";
 
 export async function POST(req: Request) {
   try {
@@ -44,7 +46,7 @@ export async function POST(req: Request) {
     const token = await generateToken({
       userId: user.id,
       email: user.email,
-      role: user.role,
+      role: user.role as Role,
     });
     await setAuthCookie(token);
 

@@ -70,12 +70,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                     ))}
                 </div>
 
-                <div className="p-4 border-t border-border">
-                    <Button variant="ghost" className="w-full justify-start gap-3 text-destructive hover:text-destructive hover:bg-destructive/10">
-                        <LogOut size={20} />
-                        <span>Sign Out</span>
-                    </Button>
-                </div>
+
             </aside>
 
             {/* Main Content */}

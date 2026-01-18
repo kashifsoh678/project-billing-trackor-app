@@ -1,7 +1,7 @@
 /**
  * Shared TypeScript types
  */
-import { Role, ProjectStatus, TimeLogStatus } from "@prisma/client";
+import { Role, ProjectStatus, TimeLogStatus } from "./enums";
 
 export { Role, ProjectStatus, TimeLogStatus };
 
