@@ -99,11 +99,9 @@ export default function ProjectDetailsPage({ params }: { params: { id: string } 
     }
 
     const handleDeleteLog = (log: TimeLog) => {
-        if (editingLog) {
-            setLogs(logs.filter((l) => l.id !== editingLog.id))
-            setIsModalOpen(false)
-            setEditingLog(null)
-        }
+        setLogs(logs.filter((l) => l.id !== log.id))
+        setIsModalOpen(false)
+        setEditingLog(null)
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

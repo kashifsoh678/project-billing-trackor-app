@@ -3,7 +3,7 @@
 import React, { ReactNode } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { FolderKanban, LayoutDashboard, LogOut, Menu } from 'lucide-react'
+import { FolderKanban, LayoutDashboard, LogOut } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import Navbar from './navbar'
