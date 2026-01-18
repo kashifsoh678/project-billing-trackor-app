@@ -5,19 +5,14 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
-import * as z from 'zod'
 
-const projectSchema = z.object({
-    name: z.string().min(1, 'Project name is required'),
-    description: z.string().optional(),
-    billing_rate: z.coerce.number().min(0, 'Billing rate must be positive'),
-    status: z.enum(['active', 'completed', 'archived']).default('active'),
-})
+import { ProjectInput, projectSchema } from '@/lib/validators'
+import { Project, ProjectStatus } from '@/types'
 
-type ProjectFormValues = z.infer<typeof projectSchema>
+type ProjectFormValues = ProjectInput
 
 interface ProjectFormProps {
-    initialData?: ProjectFormValues
+    initialData?: Project
     onSubmit: (data: ProjectFormValues) => void
     onCancel?: () => void
 }
@@ -33,14 +28,12 @@ const ProjectForm = ({ initialData, onSubmit, onCancel }: ProjectFormProps) => {
         defaultValues: initialData || {
             name: '',
             description: '',
-            billing_rate: 0,
-            status: 'active',
+            billingRate: 0,
+            status: ProjectStatus.ACTIVE,
         },
     })
 
     const handleFormSubmit = async (data: ProjectFormValues) => {
-        // Mock submission delay
-        await new Promise((resolve) => setTimeout(resolve, 500))
         onSubmit(data)
     }
 
@@ -67,20 +60,20 @@ const ProjectForm = ({ initialData, onSubmit, onCancel }: ProjectFormProps) => {
                     label="Billing Rate ($/hr)"
                     type="number"
                     step="0.01"
-                    error={errors.billing_rate?.message}
+                    error={errors.billingRate?.message}
                     required
-                    {...register('billing_rate')}
+                    {...register('billingRate')}
                 />
 
                 <div className="space-y-1.5">
                     <label className="text-sm font-medium leading-none">Status</label>
                     <select
-                        className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 mt-1"
+                        className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 mt-1 uppercase"
                         {...register('status')}
                     >
-                        <option value="active">Active</option>
-                        <option value="completed">Completed</option>
-                        <option value="archived">Archived</option>
+                        <option value="ACTIVE">Active</option>
+                        <option value="COMPLETED">Completed</option>
+                        <option value="ARCHIVED">Archived</option>
                     </select>
                 </div>
             </div>

@@ -6,15 +6,7 @@ import { Clock, MoreHorizontal } from 'lucide-react'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 
-interface TimeLog {
-    id: string
-    project_id: string
-    user_id: string
-    hours: number
-    notes: string
-    log_date: string
-    status: 'todo' | 'in-progress' | 'done'
-}
+import { TimeLog } from '@/types'
 
 interface KanbanCardProps {
     log: TimeLog
@@ -100,7 +92,7 @@ const KanbanCard = ({ log, index, onEdit, onDelete }: KanbanCardProps) => {
                                 <Clock size={12} />
                                 <span className="font-medium">{log.hours}h</span>
                             </div>
-                            <span>{new Date(log.log_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+                            <span>{new Date(log.logDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
                         </CardFooter>
                     </Card>
                 </div>

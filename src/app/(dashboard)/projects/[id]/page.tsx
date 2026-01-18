@@ -4,21 +4,13 @@ import { DropResult } from '@hello-pangea/dnd'
 import { Plus, Calendar, DollarSign, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import KanbanBoard, { TimeLogStatus } from '@/components/kanban/kanban-board'
+import { TimeLog, TimeLogStatus } from '@/types'
+import { TimeLogInput } from '@/lib/validators'
+import { useMemo, useState } from 'react'
+import KanbanBoard from '@/components/kanban/kanban-board'
 import TimeLogForm from '@/components/time-tracking/time-log-form'
 import BillingSummary from '@/components/projects/billing-summary'
 import Modal from '@/components/ui/modal'
-import { useMemo, useState } from 'react'
-
-interface TimeLog {
-    id: string
-    project_id: string
-    user_id: string
-    hours: number
-    notes: string
-    log_date: string
-    status: TimeLogStatus
-}
 
 
 // Mock Data
@@ -31,33 +23,39 @@ const MOCK_PROJECT = {
     created_at: '2025-01-15T10:00:00Z',
 }
 
-const INITIAL_LOGS = [
+const INITIAL_LOGS: TimeLog[] = [
     {
         id: 'l1',
-        project_id: '1',
-        user_id: 'u1',
+        projectId: '1',
+        userId: 'u1',
         hours: 2.5,
         notes: 'Initial wireframing for homepage',
-        log_date: '2025-01-16',
-        status: 'done' as TimeLogStatus,
+        logDate: new Date('2025-01-16'),
+        status: TimeLogStatus.DONE,
+        createdAt: new Date(),
+        updatedAt: new Date(),
     },
     {
         id: 'l2',
-        project_id: '1',
-        user_id: 'u1',
+        projectId: '1',
+        userId: 'u1',
         hours: 4.0,
         notes: 'Component library setup in Figma',
-        log_date: '2025-01-17',
-        status: 'in-progress' as TimeLogStatus,
+        logDate: new Date('2025-01-17'),
+        status: TimeLogStatus.IN_PROGRESS,
+        createdAt: new Date(),
+        updatedAt: new Date(),
     },
     {
         id: 'l3',
-        project_id: '1',
-        user_id: 'u1',
+        projectId: '1',
+        userId: 'u1',
         hours: 1.5,
         notes: 'Review meeting with stakeholders',
-        log_date: '2025-01-18',
-        status: 'todo' as TimeLogStatus,
+        logDate: new Date('2025-01-18'),
+        status: TimeLogStatus.TODO,
+        createdAt: new Date(),
+        updatedAt: new Date(),
     },
 ]
 
@@ -104,40 +102,50 @@ export default function ProjectDetailsPage({ params }: { params: { id: string } 
         setEditingLog(null)
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const handleSaveLog = (data: any) => {
+    const handleSaveLog = (data: TimeLogInput) => {
         // Validation: Check total hours per day
-        const logDate = data.log_date
+        const logDateStr = new Date(data.logDate).toISOString().split('T')[0]
         const newHours = Number(data.hours)
 
         // Calculate existing hours for this date, excluding current log if editing
-        const existingLogs = logs.filter(l =>
-            l.log_date === logDate &&
+        const existingLogs = logs.filter((l: TimeLog) =>
+            new Date(l.logDate).toISOString().split('T')[0] === logDateStr &&
             (!editingLog || l.id !== editingLog.id)
         )
-        const totalExistingHours = existingLogs.reduce((acc, l) => acc + l.hours, 0)
+        const totalExistingHours = existingLogs.reduce((acc: number, l: TimeLog) => acc + l.hours, 0)
 
         if (totalExistingHours + newHours > 12) {
-            alert(`Total hours for ${logDate} cannot exceed 12 hours. Current total: ${totalExistingHours + newHours}`)
+            alert(`Total hours for ${logDateStr} cannot exceed 12 hours. Current total: ${totalExistingHours + newHours}`)
             return
         }
 
         if (editingLog) {
             // Update existing log
-            const updatedLogs = logs.map(l =>
+            const updatedLogs = logs.map((l: TimeLog) =>
                 l.id === editingLog.id
-                    ? { ...l, ...data, hours: newHours }
+                    ? {
+                        ...l,
+                        hours: newHours,
+                        notes: data.notes || '',
+                        logDate: new Date(data.logDate),
+                        status: data.status,
+                        projectId: data.projectId
+                    }
                     : l
             )
             setLogs(updatedLogs)
         } else {
             // Add new log
-            const newLog = {
+            const newLog: TimeLog = {
                 id: Math.random().toString(36).substr(2, 9),
-                project_id: MOCK_PROJECT.id,
-                user_id: 'u1',
-                ...data,
+                projectId: MOCK_PROJECT.id,
+                userId: 'u1',
                 hours: newHours,
+                notes: data.notes || '',
+                logDate: new Date(data.logDate),
+                status: data.status,
+                createdAt: new Date(),
+                updatedAt: new Date(),
             }
             setLogs([...logs, newLog])
         }
