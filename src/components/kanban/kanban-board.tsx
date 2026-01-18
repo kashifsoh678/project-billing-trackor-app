@@ -5,17 +5,7 @@ import { DragDropContext, DropResult } from '@hello-pangea/dnd'
 import KanbanColumn from './kanban-column'
 import KanbanCard from './kanban-card'
 
-export type TimeLogStatus = 'todo' | 'in-progress' | 'done'
-
-export interface TimeLog {
-    id: string
-    project_id: string
-    user_id: string
-    hours: number
-    notes: string
-    log_date: string
-    status: TimeLogStatus
-}
+import { TimeLog, TimeLogStatus } from '@/types'
 
 interface KanbanBoardProps {
     logs: TimeLog[]
@@ -26,9 +16,9 @@ interface KanbanBoardProps {
 
 const KanbanBoard = ({ logs, onDragEnd, onEdit, onDelete }: KanbanBoardProps) => {
     const columns: { id: TimeLogStatus; title: string }[] = [
-        { id: 'todo', title: 'To Do' },
-        { id: 'in-progress', title: 'In Progress' },
-        { id: 'done', title: 'Done' },
+        { id: TimeLogStatus.TODO, title: 'To Do' },
+        { id: TimeLogStatus.IN_PROGRESS, title: 'In Progress' },
+        { id: TimeLogStatus.DONE, title: 'Done' },
     ]
 
     const getLogsByStatus = (status: TimeLogStatus) => {

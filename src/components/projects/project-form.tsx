@@ -7,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 
 import { ProjectInput, projectSchema } from '@/lib/validators'
-import { Project } from '@/types'
+import { Project, ProjectStatus } from '@/types'
 
 type ProjectFormValues = ProjectInput
 
@@ -29,7 +29,7 @@ const ProjectForm = ({ initialData, onSubmit, onCancel }: ProjectFormProps) => {
             name: '',
             description: '',
             billingRate: 0,
-            status: 'ACTIVE',
+            status: ProjectStatus.ACTIVE,
         },
     })
 

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ProjectStatus, TimeLogStatus } from "@prisma/client";
+import { ProjectStatus, TimeLogStatus } from "@/types/enums";
 
 export const projectSchema = z.object({
   name: z.string().min(1, "Name is required"),

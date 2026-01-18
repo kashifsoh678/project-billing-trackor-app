@@ -4,25 +4,15 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm } from 'react-hook-form'
-import * as z from 'zod'
+import { useForm, DefaultValues } from 'react-hook-form'
 
-const timeLogSchema = z.object({
-    hours: z.coerce
-        .number()
-        .min(0.1, 'Hours must be at least 0.1')
-        .max(12, 'Total hours per day cannot exceed 12'),
-    notes: z.string().min(5, 'Notes must be at least 5 characters'),
-    log_date: z.string().refine((date) => !isNaN(Date.parse(date)), {
-        message: 'Invalid date',
-    }),
-    status: z.enum(['todo', 'in-progress', 'done']),
-})
+import { TimeLogStatus, TimeLog } from '@/types'
+import { TimeLogInput, timeLogSchema } from '@/lib/validators'
 
-type TimeLogFormValues = z.infer<typeof timeLogSchema>
+type TimeLogFormValues = TimeLogInput
 
 interface TimeLogFormProps {
-    initialData?: TimeLogFormValues
+    initialData?: TimeLog
     onSubmit: (data: TimeLogFormValues) => void
     onCancel?: () => void
 }
@@ -35,12 +25,18 @@ const TimeLogForm = ({ initialData, onSubmit, onCancel }: TimeLogFormProps) => {
     } = useForm<TimeLogFormValues>({
         // @ts-expect-error - zodResolver type mismatch with coerce.number()
         resolver: zodResolver(timeLogSchema),
-        defaultValues: initialData || {
+        defaultValues: (initialData ? {
+            hours: initialData.hours,
+            notes: initialData.notes || '',
+            logDate: new Date(initialData.logDate).toISOString().split('T')[0] as unknown as Date,
+            status: initialData.status,
+            projectId: initialData.projectId,
+        } : {
             hours: 1,
             notes: '',
-            log_date: new Date().toISOString().split('T')[0],
-            status: 'todo',
-        },
+            logDate: new Date().toISOString().split('T')[0] as unknown as Date,
+            status: TimeLogStatus.TODO,
+        }) as DefaultValues<TimeLogFormValues>,
         mode: 'onChange',
     })
 
@@ -66,9 +62,9 @@ const TimeLogForm = ({ initialData, onSubmit, onCancel }: TimeLogFormProps) => {
                 <Input
                     label="Date"
                     type="date"
-                    error={errors.log_date?.message}
+                    error={errors.logDate?.message}
                     required
-                    {...register('log_date')}
+                    {...register('logDate')}
                 />
             </div>
 
@@ -83,12 +79,12 @@ const TimeLogForm = ({ initialData, onSubmit, onCancel }: TimeLogFormProps) => {
             <div className="space-y-1.5">
                 <label className="text-sm font-medium leading-none">Status</label>
                 <select
-                    className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 mt-1"
+                    className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 mt-1 uppercase"
                     {...register('status')}
                 >
-                    <option value="todo">Todo</option>
-                    <option value="in-progress">In Progress</option>
-                    <option value="done">Done</option>
+                    <option value={TimeLogStatus.TODO}>Todo</option>
+                    <option value={TimeLogStatus.IN_PROGRESS}>In Progress</option>
+                    <option value={TimeLogStatus.DONE}>Done</option>
                 </select>
                 {errors.status && (
                     <p className="text-xs font-medium text-destructive">{errors.status.message}</p>
