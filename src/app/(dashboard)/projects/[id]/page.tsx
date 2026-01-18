@@ -98,7 +98,7 @@ export default function ProjectDetailsPage({ params }: { params: { id: string } 
         setIsModalOpen(true)
     }
 
-    const handleDeleteLog = () => {
+    const handleDeleteLog = (log: TimeLog) => {
         if (editingLog) {
             setLogs(logs.filter((l) => l.id !== editingLog.id))
             setIsModalOpen(false)
@@ -183,7 +183,7 @@ export default function ProjectDetailsPage({ params }: { params: { id: string } 
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 flex-1 min-h-0">
                 {/* Kanban Board */}
                 <div className="lg:col-span-3 min-h-[500px]">
-                    <KanbanBoard logs={logs} onDragEnd={onDragEnd} onEdit={handleEditLog} />
+                    <KanbanBoard logs={logs} onDragEnd={onDragEnd} onEdit={handleEditLog} onDelete={handleDeleteLog} />
                 </div>
 
                 {/* Sidebar Info */}
@@ -207,7 +207,7 @@ export default function ProjectDetailsPage({ params }: { params: { id: string } 
                         setIsModalOpen(false)
                         setEditingLog(null)
                     }}
-                    onDelete={editingLog ? handleDeleteLog : undefined}
+                    onDelete={handleDeleteLog}
                 />
             </Modal>
         </div>

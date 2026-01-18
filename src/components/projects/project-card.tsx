@@ -34,9 +34,9 @@ const ProjectCard = ({ project, onEdit, onArchive }: ProjectCardProps) => {
     }, [])
 
     const statusColors = {
-        active: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
-        completed: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-        archived: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400',
+        active: 'bg-green-100 text-green-700 ',
+        completed: 'bg-blue-100 text-blue-700  ',
+        archived: 'bg-gray-100 text-gray-700  ',
     }
 
     return (
@@ -91,7 +91,7 @@ const ProjectCard = ({ project, onEdit, onArchive }: ProjectCardProps) => {
 
                 {showMenu && (
                     <div className="absolute right-0 mt-1 w-32 rounded-md border bg-popover text-popover-foreground shadow-md outline-none animate-in fade-in-0 zoom-in-95">
-                        <div className="flex flex-col py-1">
+                        <div className="flex flex-col p-1">
                             <button
                                 className="relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground text-left"
                                 onClick={(e) => {
