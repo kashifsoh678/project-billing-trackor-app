@@ -4,6 +4,7 @@
 import { Role, ProjectStatus, TimeLogStatus } from "./enums";
 
 export { Role, ProjectStatus, TimeLogStatus };
+export * from "./api";
 
 export interface User {
   id: string;

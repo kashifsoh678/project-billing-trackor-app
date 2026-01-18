@@ -40,7 +40,6 @@ interface DashboardLayoutProps {
 
 const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     const pathname = usePathname()
-
     const navItems = [
         { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
         { icon: FolderKanban, label: 'Projects', href: '/projects' },
