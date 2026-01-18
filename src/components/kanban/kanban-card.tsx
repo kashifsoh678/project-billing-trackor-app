@@ -19,9 +19,10 @@ interface TimeLog {
 interface KanbanCardProps {
     log: TimeLog
     index: number
+    onEdit: (log: TimeLog) => void
 }
 
-const KanbanCard = ({ log, index }: KanbanCardProps) => {
+const KanbanCard = ({ log, index, onEdit }: KanbanCardProps) => {
     return (
         <Draggable draggableId={log.id} index={index}>
             {(provided, snapshot) => (
@@ -39,7 +40,12 @@ const KanbanCard = ({ log, index }: KanbanCardProps) => {
                         <CardContent className="p-4 pb-2">
                             <div className="flex justify-between items-start gap-2">
                                 <p className="text-sm font-medium line-clamp-3">{log.notes}</p>
-                                <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-muted-foreground shrink-0">
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-6 w-6 p-0 text-muted-foreground shrink-0"
+                                    onClick={() => onEdit(log)}
+                                >
                                     <MoreHorizontal size={14} />
                                 </Button>
                             </div>

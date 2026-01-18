@@ -25,9 +25,10 @@ interface TimeLogFormProps {
     initialData?: TimeLogFormValues
     onSubmit: (data: TimeLogFormValues) => void
     onCancel?: () => void
+    onDelete?: () => void
 }
 
-const TimeLogForm = ({ initialData, onSubmit, onCancel }: TimeLogFormProps) => {
+const TimeLogForm = ({ initialData, onSubmit, onCancel, onDelete }: TimeLogFormProps) => {
     const {
         register,
         handleSubmit,
@@ -99,6 +100,11 @@ const TimeLogForm = ({ initialData, onSubmit, onCancel }: TimeLogFormProps) => {
                 {onCancel && (
                     <Button type="button" size='sm' variant="outline" onClick={onCancel}>
                         Cancel
+                    </Button>
+                )}
+                {initialData && onDelete && (
+                    <Button type="button" size='sm' variant="destructive" onClick={onDelete}>
+                        Delete
                     </Button>
                 )}
                 <Button type="submit" size='sm' disabled={isSubmitting}>

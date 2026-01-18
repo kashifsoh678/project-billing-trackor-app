@@ -10,6 +10,16 @@ import BillingSummary from '@/components/projects/billing-summary'
 import Modal from '@/components/ui/modal'
 import { useMemo, useState } from 'react'
 
+interface TimeLog {
+    id: string
+    project_id: string
+    user_id: string
+    hours: number
+    notes: string
+    log_date: string
+    status: TimeLogStatus
+}
+
 
 // Mock Data
 const MOCK_PROJECT = {
@@ -56,6 +66,7 @@ export default function ProjectDetailsPage({ params }: { params: { id: string } 
 
     const [logs, setLogs] = useState(INITIAL_LOGS)
     const [isModalOpen, setIsModalOpen] = useState(false)
+    const [editingLog, setEditingLog] = useState<TimeLog | null>(null)
 
     const totalHours = useMemo(() => logs.reduce((acc, log) => acc + log.hours, 0), [logs])
 
@@ -82,16 +93,59 @@ export default function ProjectDetailsPage({ params }: { params: { id: string } 
         setLogs(newLogs)
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const handleAddLog = (data: any) => {
-        const newLog = {
-            id: Math.random().toString(36).substr(2, 9),
-            project_id: MOCK_PROJECT.id,
-            user_id: 'u1',
-            ...data,
+    const handleEditLog = (log: TimeLog) => {
+        setEditingLog(log)
+        setIsModalOpen(true)
+    }
+
+    const handleDeleteLog = () => {
+        if (editingLog) {
+            setLogs(logs.filter((l) => l.id !== editingLog.id))
+            setIsModalOpen(false)
+            setEditingLog(null)
         }
-        setLogs([...logs, newLog])
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const handleSaveLog = (data: any) => {
+        // Validation: Check total hours per day
+        const logDate = data.log_date
+        const newHours = Number(data.hours)
+
+        // Calculate existing hours for this date, excluding current log if editing
+        const existingLogs = logs.filter(l =>
+            l.log_date === logDate &&
+            (!editingLog || l.id !== editingLog.id)
+        )
+        const totalExistingHours = existingLogs.reduce((acc, l) => acc + l.hours, 0)
+
+        if (totalExistingHours + newHours > 12) {
+            alert(`Total hours for ${logDate} cannot exceed 12 hours. Current total: ${totalExistingHours + newHours}`)
+            return
+        }
+
+        if (editingLog) {
+            // Update existing log
+            const updatedLogs = logs.map(l =>
+                l.id === editingLog.id
+                    ? { ...l, ...data, hours: newHours }
+                    : l
+            )
+            setLogs(updatedLogs)
+        } else {
+            // Add new log
+            const newLog = {
+                id: Math.random().toString(36).substr(2, 9),
+                project_id: MOCK_PROJECT.id,
+                user_id: 'u1',
+                ...data,
+                hours: newHours,
+            }
+            setLogs([...logs, newLog])
+        }
+
         setIsModalOpen(false)
+        setEditingLog(null)
     }
 
     return (
@@ -129,7 +183,7 @@ export default function ProjectDetailsPage({ params }: { params: { id: string } 
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 flex-1 min-h-0">
                 {/* Kanban Board */}
                 <div className="lg:col-span-3 min-h-[500px]">
-                    <KanbanBoard logs={logs} onDragEnd={onDragEnd} />
+                    <KanbanBoard logs={logs} onDragEnd={onDragEnd} onEdit={handleEditLog} />
                 </div>
 
                 {/* Sidebar Info */}
@@ -140,12 +194,20 @@ export default function ProjectDetailsPage({ params }: { params: { id: string } 
 
             <Modal
                 isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                title="Add Time Log"
+                onClose={() => {
+                    setIsModalOpen(false)
+                    setEditingLog(null)
+                }}
+                title={editingLog ? "Edit Time Log" : "Add Time Log"}
             >
                 <TimeLogForm
-                    onSubmit={handleAddLog}
-                    onCancel={() => setIsModalOpen(false)}
+                    initialData={editingLog || undefined}
+                    onSubmit={handleSaveLog}
+                    onCancel={() => {
+                        setIsModalOpen(false)
+                        setEditingLog(null)
+                    }}
+                    onDelete={editingLog ? handleDeleteLog : undefined}
                 />
             </Modal>
         </div>

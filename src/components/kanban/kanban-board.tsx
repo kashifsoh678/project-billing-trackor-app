@@ -20,9 +20,10 @@ interface TimeLog {
 interface KanbanBoardProps {
     logs: TimeLog[]
     onDragEnd: (result: DropResult) => void
+    onEdit: (log: TimeLog) => void
 }
 
-const KanbanBoard = ({ logs, onDragEnd }: KanbanBoardProps) => {
+const KanbanBoard = ({ logs, onDragEnd, onEdit }: KanbanBoardProps) => {
     const columns: { id: TimeLogStatus; title: string }[] = [
         { id: 'todo', title: 'To Do' },
         { id: 'in-progress', title: 'In Progress' },
@@ -46,7 +47,7 @@ const KanbanBoard = ({ logs, onDragEnd }: KanbanBoardProps) => {
                             count={columnLogs.length}
                         >
                             {columnLogs.map((log, index) => (
-                                <KanbanCard key={log.id} log={log} index={index} />
+                                <KanbanCard key={log.id} log={log} index={index} onEdit={onEdit} />
                             ))}
                         </KanbanColumn>
                     )
