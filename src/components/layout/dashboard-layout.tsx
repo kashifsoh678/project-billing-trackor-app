@@ -1,11 +1,10 @@
 'use client'
 
-import React, { ReactNode } from 'react'
+import { cn } from '@/lib/utils'
+import { FolderKanban, LayoutDashboard } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { FolderKanban, LayoutDashboard, LogOut } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
+import React, { ReactNode } from 'react'
 import Navbar from './navbar'
 
 const SidebarItem = ({

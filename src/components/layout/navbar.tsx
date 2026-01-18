@@ -1,8 +1,8 @@
-import React from 'react'
-import { Menu, LogOut, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { useAuth } from '@/context/auth-context'
 import { ConfirmModal } from '@/components/ui/confirm-modal'
+import { useAuth } from '@/context/auth-context'
+import { LogOut, Menu, User } from 'lucide-react'
+import React from 'react'
 import { toast } from 'react-hot-toast'
 
 interface NavbarProps {
@@ -19,7 +19,8 @@ const Navbar = ({ onMenuClick }: NavbarProps) => {
         try {
             await logout()
             toast.success('Logged out successfully')
-        } catch (_error) {
+        } catch (error) {
+            console.error('Failed to logout', error)
             toast.error('Failed to logout. Please try again.')
         } finally {
             setIsLoggingOut(false)

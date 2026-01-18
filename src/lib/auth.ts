@@ -37,6 +37,7 @@ export async function verifyToken(token: string): Promise<JWTPayload | null> {
     const { payload } = await jwtVerify(token, JWT_SECRET);
     return payload as unknown as JWTPayload;
   } catch (_error) {
+    console.error("Failed to verify token", _error);
     return null;
   }
 }
