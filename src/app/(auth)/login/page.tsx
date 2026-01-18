@@ -36,8 +36,8 @@ const LoginPage: React.FC = () => {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center p-4 ">
-            <Card className="w-full max-w-md glass border-white/10">
+        <div className="min-h-screen flex items-center justify-center p-4 auth-gradient ">
+            <Card className="w-full max-w-md  border-white/10">
                 <CardHeader className="space-y-1">
                     <div className="flex items-center justify-center mb-4">
                         <div className="p-3 rounded-xl bg-primary/10 text-primary">
@@ -56,6 +56,7 @@ const LoginPage: React.FC = () => {
                             placeholder="name@example.com"
                             type="email"
                             error={errors.email?.message}
+                            required
                             {...register('email')}
                         />
                         <Input
@@ -63,6 +64,7 @@ const LoginPage: React.FC = () => {
                             placeholder="••••••••"
                             type="password"
                             error={errors.password?.message}
+                            required
                             {...register('password')}
                         />
                         <Button type="submit" size='lg' className="w-full text-lg font-semibold" disabled={isSubmitting}>

@@ -1,5 +1,5 @@
+import { cn } from '@/lib/utils'
 import React from 'react'
-import { cn } from './button'
 
 const Card = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
     <div

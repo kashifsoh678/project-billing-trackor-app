@@ -7,7 +7,7 @@ import KanbanCard from './kanban-card'
 
 export type TimeLogStatus = 'todo' | 'in-progress' | 'done'
 
-interface TimeLog {
+export interface TimeLog {
     id: string
     project_id: string
     user_id: string
@@ -20,9 +20,11 @@ interface TimeLog {
 interface KanbanBoardProps {
     logs: TimeLog[]
     onDragEnd: (result: DropResult) => void
+    onEdit: (log: TimeLog) => void
+    onDelete: (log: TimeLog) => void
 }
 
-const KanbanBoard = ({ logs, onDragEnd }: KanbanBoardProps) => {
+const KanbanBoard = ({ logs, onDragEnd, onEdit, onDelete }: KanbanBoardProps) => {
     const columns: { id: TimeLogStatus; title: string }[] = [
         { id: 'todo', title: 'To Do' },
         { id: 'in-progress', title: 'In Progress' },
@@ -46,7 +48,7 @@ const KanbanBoard = ({ logs, onDragEnd }: KanbanBoardProps) => {
                             count={columnLogs.length}
                         >
                             {columnLogs.map((log, index) => (
-                                <KanbanCard key={log.id} log={log} index={index} />
+                                <KanbanCard key={log.id} log={log} index={index} onEdit={onEdit} onDelete={onDelete} />
                             ))}
                         </KanbanColumn>
                     )

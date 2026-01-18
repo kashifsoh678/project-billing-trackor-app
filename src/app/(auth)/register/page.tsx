@@ -43,8 +43,8 @@ const SignupPage: React.FC = () => {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center p-4 ">
-            <Card className="w-full max-w-md glass border-white/10">
+        <div className="min-h-screen flex items-center justify-center p-4 auth-gradient ">
+            <Card className="w-full max-w-md  border-white/10">
                 <CardHeader className="space-y-1">
                     <div className="flex items-center justify-center mb-4">
                         <div className="p-3 rounded-xl bg-primary/10 text-primary">
@@ -62,27 +62,31 @@ const SignupPage: React.FC = () => {
                             label="Full Name"
                             placeholder="John Doe"
                             error={errors.name?.message}
+                            required
                             {...register('name')}
                         />
                         <Input
                             label="Email"
-                            placeholder="name@example.com"
                             type="email"
+                            placeholder="m@example.com"
                             error={errors.email?.message}
+                            required
                             {...register('email')}
                         />
                         <Input
                             label="Password"
-                            placeholder="••••••••"
                             type="password"
+                            placeholder="••••••••"
                             error={errors.password?.message}
+                            required
                             {...register('password')}
                         />
                         <Input
                             label="Confirm Password"
-                            placeholder="••••••••"
                             type="password"
+                            placeholder="••••••••"
                             error={errors.confirmPassword?.message}
+                            required
                             {...register('confirmPassword')}
                         />
                         <Button type="submit" size='lg' className="w-full text-lg font-semibold" disabled={isSubmitting}>

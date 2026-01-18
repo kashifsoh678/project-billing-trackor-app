@@ -1,9 +1,20 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import ProjectCard from '@/components/projects/project-card'
+import Modal from '@/components/ui/modal'
+import ProjectForm from '@/components/projects/project-form'
+
+interface Project {
+    id: string
+    name: string
+    description: string
+    billing_rate: number
+    status: 'active' | 'completed' | 'archived'
+    created_at: string
+}
 
 const MOCK_PROJECTS = [
     {
@@ -49,8 +60,65 @@ const MOCK_PROJECTS = [
 ]
 
 export default function ProjectsPage() {
+    const [projects, setProjects] = useState<Project[]>(MOCK_PROJECTS)
+    const [isModalOpen, setIsModalOpen] = useState(false)
+    const [editingProject, setEditingProject] = useState<Project | null>(null)
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const handleSaveProject = (data: any) => {
+        if (editingProject) {
+            // Update
+            const updatedProjects = projects.map(p =>
+                p.id === editingProject.id
+                    ? { ...p, ...data }
+                    : p
+            )
+            setProjects(updatedProjects)
+        } else {
+            // Create
+            const newProject: Project = {
+                id: Math.random().toString(36).substr(2, 9),
+                created_at: new Date().toISOString(),
+                status: 'active',
+                ...data,
+            }
+            setProjects([newProject, ...projects])
+        }
+        setIsModalOpen(false)
+        setEditingProject(null)
+    }
+
+    const handleEditProject = (project: Project) => {
+        setEditingProject(project)
+        setIsModalOpen(true)
+    }
+
+    const handleArchiveProject = (project: Project) => {
+        if (confirm('Are you sure you want to archive this project?')) {
+            const updatedProjects = projects.map(p =>
+                p.id === project.id
+                    ? { ...p, status: 'archived' as const }
+                    : p
+            )
+            setProjects(updatedProjects)
+        }
+    }
+
+    const [currentPage, setCurrentPage] = useState(1)
+    const ITEMS_PER_PAGE = 4
+
+    const totalPages = Math.ceil(projects.length / ITEMS_PER_PAGE)
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
+    const currentProjects = projects.slice(startIndex, startIndex + ITEMS_PER_PAGE)
+
+    const handlePageChange = (newPage: number) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+            setCurrentPage(newPage)
+        }
+    }
+
     return (
-        <div className="space-y-8">
+        <div className="space-y-8 h-full">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Projects</h1>
@@ -58,17 +126,73 @@ export default function ProjectsPage() {
                         Manage your active projects and track billing.
                     </p>
                 </div>
-                <Button className="gap-2">
+                <Button
+                    className="gap-2"
+                    onClick={() => {
+                        setEditingProject(null)
+                        setIsModalOpen(true)
+                    }}
+                >
                     <Plus size={18} />
                     New Project
                 </Button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {MOCK_PROJECTS.map((project) => (
-                    <ProjectCard key={project.id} project={project} />
-                ))}
+            <div className='flex flex-col justify-between'>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {currentProjects.map((project) => (
+                        <ProjectCard
+                            key={project.id}
+                            project={project}
+                            onEdit={handleEditProject}
+                            onArchive={handleArchiveProject}
+                        />
+                    ))}
+                </div>
+
+                {totalPages > 1 && (
+                    <div className="flex items-center justify-end gap-2 mt-4">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handlePageChange(currentPage - 1)}
+                            disabled={currentPage === 1}
+                        >
+                            Previous
+                        </Button>
+                        <span className="text-sm font-medium mx-2">
+                            Page {currentPage} of {totalPages}
+                        </span>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handlePageChange(currentPage + 1)}
+                            disabled={currentPage === totalPages}
+                        >
+                            Next
+                        </Button>
+                    </div>
+                )}
             </div>
+
+
+            <Modal
+                isOpen={isModalOpen}
+                onClose={() => {
+                    setIsModalOpen(false)
+                    setEditingProject(null)
+                }}
+                title={editingProject ? "Edit Project" : "New Project"}
+            >
+                <ProjectForm
+                    initialData={editingProject || undefined}
+                    onSubmit={handleSaveProject}
+                    onCancel={() => {
+                        setIsModalOpen(false)
+                        setEditingProject(null)
+                    }}
+                />
+            </Modal>
         </div>
     )
 }

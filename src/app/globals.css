@@ -84,6 +84,12 @@
       "rlig" 1,
       "calt" 1;
   }
+
+  /* Hide default date picker indicator */
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    display: none;
+    -webkit-appearance: none;
+  }
 }
 
 .glass {
