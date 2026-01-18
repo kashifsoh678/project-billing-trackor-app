@@ -62,4 +62,5 @@ model TimeLog {
 
   @@index([projectId])
   @@index([userId])
+  @@index([logDate])
 }

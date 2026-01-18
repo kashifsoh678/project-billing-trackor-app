@@ -11,62 +11,44 @@ import KanbanBoard from '@/components/kanban/kanban-board'
 import TimeLogForm from '@/components/time-tracking/time-log-form'
 import BillingSummary from '@/components/projects/billing-summary'
 import Modal from '@/components/ui/modal'
+import { ConfirmModal } from '@/components/ui/confirm-modal'
+import { useProject } from '@/hooks/use-projects'
+import {
+    useTimeLogs,
+    useCreateTimeLog,
+    useUpdateTimeLog,
+    useDeleteTimeLog,
+    useBillingSummary
+} from '@/hooks/use-time-logs'
+import { useParams } from 'next/navigation'
+import { ProjectDetailSkeleton } from '@/components/projects/project-detail-skeleton'
+import { useAuth } from '@/context/auth-context'
+import { Role } from '@/types/enums'
 
 
-// Mock Data
-const MOCK_PROJECT = {
-    id: '1',
-    name: 'Website Redesign',
-    description: 'Complete overhaul of the corporate website including new branding and CMS integration.',
-    billing_rate: 85,
-    status: 'active',
-    created_at: '2025-01-15T10:00:00Z',
-}
+export default function ProjectDetailsPage() {
+    const { id } = useParams() as { id: string }
+    const { user } = useAuth()
+    const isAdmin = user?.role === Role.ADMIN
 
-const INITIAL_LOGS: TimeLog[] = [
-    {
-        id: 'l1',
-        projectId: '1',
-        userId: 'u1',
-        hours: 2.5,
-        notes: 'Initial wireframing for homepage',
-        logDate: new Date('2025-01-16'),
-        status: TimeLogStatus.DONE,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-    },
-    {
-        id: 'l2',
-        projectId: '1',
-        userId: 'u1',
-        hours: 4.0,
-        notes: 'Component library setup in Figma',
-        logDate: new Date('2025-01-17'),
-        status: TimeLogStatus.IN_PROGRESS,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-    },
-    {
-        id: 'l3',
-        projectId: '1',
-        userId: 'u1',
-        hours: 1.5,
-        notes: 'Review meeting with stakeholders',
-        logDate: new Date('2025-01-18'),
-        status: TimeLogStatus.TODO,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-    },
-]
+    const { data: project, isLoading: isProjectLoading } = useProject(id)
+    const { data: logsResponse, isLoading: isLogsLoading } = useTimeLogs({ projectId: id, limit: 1000 })
+    const logs = useMemo(() => logsResponse?.data || [], [logsResponse])
+    const { data: billing } = useBillingSummary(isAdmin ? id : '')
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export default function ProjectDetailsPage({ params }: { params: { id: string } }) {
+    const createLogMutation = useCreateTimeLog()
+    const updateLogMutation = useUpdateTimeLog()
+    const deleteLogMutation = useDeleteTimeLog()
 
-    const [logs, setLogs] = useState(INITIAL_LOGS)
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [editingLog, setEditingLog] = useState<TimeLog | null>(null)
+    const [deleteModalOpen, setDeleteModalOpen] = useState(false)
+    const [logToDelete, setLogToDelete] = useState<TimeLog | null>(null)
 
-    const totalHours = useMemo(() => logs.reduce((acc, log) => acc + log.hours, 0), [logs])
+    const totalHours = useMemo(() => {
+        if (isAdmin && billing) return billing.totalHours
+        return logs.reduce((acc, log) => acc + log.hours, 0)
+    }, [isAdmin, billing, logs])
 
     const onDragEnd = (result: DropResult) => {
         const { destination, source, draggableId } = result
@@ -80,15 +62,13 @@ export default function ProjectDetailsPage({ params }: { params: { id: string } 
             return
         }
 
-        const newLogs = Array.from(logs)
-        const logIndex = newLogs.findIndex((log) => log.id === draggableId)
-        const log = newLogs[logIndex]
+        const log = logs.find((l) => l.id === draggableId)
+        if (!log) return
 
-        const updatedLog = { ...log, status: destination.droppableId as TimeLogStatus }
-
-        // Optimistic update
-        newLogs[logIndex] = updatedLog
-        setLogs(newLogs)
+        updateLogMutation.mutate({
+            id: draggableId,
+            data: { status: destination.droppableId as TimeLogStatus }
+        })
     }
 
     const handleEditLog = (log: TimeLog) => {
@@ -97,61 +77,63 @@ export default function ProjectDetailsPage({ params }: { params: { id: string } 
     }
 
     const handleDeleteLog = (log: TimeLog) => {
-        setLogs(logs.filter((l) => l.id !== log.id))
-        setIsModalOpen(false)
-        setEditingLog(null)
+        setLogToDelete(log)
+        setDeleteModalOpen(true)
+    }
+
+    const handleConfirmDelete = () => {
+        if (!logToDelete) return
+        deleteLogMutation.mutate(logToDelete.id, {
+            onSuccess: () => {
+                setDeleteModalOpen(false)
+                setLogToDelete(null)
+            }
+        })
     }
 
     const handleSaveLog = (data: TimeLogInput) => {
-        // Validation: Check total hours per day
-        const logDateStr = new Date(data.logDate).toISOString().split('T')[0]
-        const newHours = Number(data.hours)
-
-        // Calculate existing hours for this date, excluding current log if editing
-        const existingLogs = logs.filter((l: TimeLog) =>
-            new Date(l.logDate).toISOString().split('T')[0] === logDateStr &&
-            (!editingLog || l.id !== editingLog.id)
-        )
-        const totalExistingHours = existingLogs.reduce((acc: number, l: TimeLog) => acc + l.hours, 0)
-
-        if (totalExistingHours + newHours > 12) {
-            alert(`Total hours for ${logDateStr} cannot exceed 12 hours. Current total: ${totalExistingHours + newHours}`)
-            return
-        }
-
         if (editingLog) {
-            // Update existing log
-            const updatedLogs = logs.map((l: TimeLog) =>
-                l.id === editingLog.id
-                    ? {
-                        ...l,
-                        hours: newHours,
-                        notes: data.notes || '',
-                        logDate: new Date(data.logDate),
-                        status: data.status,
-                        projectId: data.projectId
-                    }
-                    : l
-            )
-            setLogs(updatedLogs)
+            updateLogMutation.mutate({
+                id: editingLog.id,
+                data: {
+                    ...data,
+                    hours: Number(data.hours),
+                    logDate: new Date(data.logDate)
+                }
+            }, {
+                onSuccess: () => {
+                    setIsModalOpen(false)
+                    setEditingLog(null)
+                }
+            })
         } else {
-            // Add new log
-            const newLog: TimeLog = {
-                id: Math.random().toString(36).substr(2, 9),
-                projectId: MOCK_PROJECT.id,
-                userId: 'u1',
-                hours: newHours,
-                notes: data.notes || '',
-                logDate: new Date(data.logDate),
-                status: data.status,
-                createdAt: new Date(),
-                updatedAt: new Date(),
-            }
-            setLogs([...logs, newLog])
+            createLogMutation.mutate({
+                ...data,
+                projectId: id,
+                hours: Number(data.hours),
+                logDate: new Date(data.logDate)
+            }, {
+                onSuccess: () => {
+                    setIsModalOpen(false)
+                    setEditingLog(null)
+                }
+            })
         }
+    }
 
-        setIsModalOpen(false)
-        setEditingLog(null)
+    if (isProjectLoading || isLogsLoading) {
+        return <ProjectDetailSkeleton />
+    }
+
+    if (!project) {
+        return (
+            <div className="flex flex-col items-center justify-center h-[60vh] gap-4">
+                <h2 className="text-2xl font-semibold">Project not found</h2>
+                <Link href="/projects">
+                    <Button variant="outline">Back to Projects</Button>
+                </Link>
+            </div>
+        )
     }
 
     return (
@@ -165,8 +147,8 @@ export default function ProjectDetailsPage({ params }: { params: { id: string } 
 
                 <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight">{MOCK_PROJECT.name}</h1>
-                        <p className="text-muted-foreground mt-1 max-w-2xl">{MOCK_PROJECT.description}</p>
+                        <h1 className="text-3xl font-bold tracking-tight">{project.name}</h1>
+                        <p className="text-muted-foreground mt-1 max-w-2xl">{project.description}</p>
                     </div>
                     <Button onClick={() => setIsModalOpen(true)} className="gap-2 shrink-0">
                         <Plus size={18} />
@@ -175,13 +157,15 @@ export default function ProjectDetailsPage({ params }: { params: { id: string } 
                 </div>
 
                 <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-1.5 bg-muted/50 px-3 py-1.5 rounded-full">
-                        <DollarSign size={16} className="text-primary" />
-                        <span className="font-medium text-foreground">${MOCK_PROJECT.billing_rate}/hr</span>
-                    </div>
+                    {isAdmin && (
+                        <div className="flex items-center gap-1.5 bg-muted/50 px-3 py-1.5 rounded-full">
+                            <DollarSign size={16} className="text-primary" />
+                            <span className="font-medium text-foreground">${project.billingRate}/hr</span>
+                        </div>
+                    )}
                     <div className="flex items-center gap-1.5 bg-muted/50 px-3 py-1.5 rounded-full">
                         <Calendar size={16} />
-                        <span>Created {new Date(MOCK_PROJECT.created_at).toLocaleDateString()}</span>
+                        <span>Created {new Date(project.createdAt).toLocaleDateString()}</span>
                     </div>
                 </div>
             </div>
@@ -194,7 +178,19 @@ export default function ProjectDetailsPage({ params }: { params: { id: string } 
 
                 {/* Sidebar Info */}
                 <div className="space-y-6">
-                    <BillingSummary totalHours={totalHours} billingRate={MOCK_PROJECT.billing_rate} />
+                    {isAdmin ? (
+                        <BillingSummary totalHours={totalHours} billingRate={project.billingRate} />
+                    ) : (
+                        <div className="bg-card border rounded-xl p-6 shadow-sm">
+                            <h3 className="font-semibold text-lg mb-4">Your Summary</h3>
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-muted-foreground">Total Hours Logged</span>
+                                    <span className="text-2xl font-bold">{totalHours.toFixed(1)}h</span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -207,6 +203,7 @@ export default function ProjectDetailsPage({ params }: { params: { id: string } 
                 title={editingLog ? "Edit Time Log" : "Add Time Log"}
             >
                 <TimeLogForm
+                    projectId={id}
                     initialData={editingLog || undefined}
                     onSubmit={handleSaveLog}
                     onCancel={() => {
@@ -215,6 +212,20 @@ export default function ProjectDetailsPage({ params }: { params: { id: string } 
                     }}
                 />
             </Modal>
+
+            <ConfirmModal
+                isOpen={deleteModalOpen}
+                onClose={() => {
+                    setDeleteModalOpen(false)
+                    setLogToDelete(null)
+                }}
+                onConfirm={handleConfirmDelete}
+                title="Delete Time Entry"
+                description="Are you sure you want to delete this time entry? This action cannot be undone."
+                confirmText="Delete"
+                variant="danger"
+                isLoading={deleteLogMutation.isPending}
+            />
         </div>
     )
 }

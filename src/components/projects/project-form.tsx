@@ -85,7 +85,7 @@ const ProjectForm = ({ initialData, onSubmit, onCancel }: ProjectFormProps) => {
                     </Button>
                 )}
                 <Button type="submit" size='sm' disabled={isSubmitting}>
-                    {initialData ? 'Update Project' : 'Create Project'}
+                    {isSubmitting ? 'Processing...' : (initialData ? 'Update Project' : 'Create Project')}
                 </Button>
             </div>
         </form>
