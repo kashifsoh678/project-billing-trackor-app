@@ -23,6 +23,7 @@ erDiagram
         String description "Optional"
         Float billingRate
         ProjectStatus status "ACTIVE | COMPLETED | ARCHIVED"
+        DateTime archivedAt "Optional"
         DateTime createdAt
         DateTime updatedAt
     }
@@ -38,24 +39,6 @@ erDiagram
         DateTime createdAt
         DateTime updatedAt
     }
-
-    %% Enums
-    class Role {
-        ADMIN
-        EMPLOYEE
-    }
-
-    class ProjectStatus {
-        ACTIVE
-        COMPLETED
-        ARCHIVED
-    }
-
-    class TimeLogStatus {
-        TODO
-        IN_PROGRESS
-        DONE
-    }
 ```
 
 ## Relationships
@@ -67,9 +50,3 @@ erDiagram
 2.  **Project to TimeLog (1:N)**
     - One `Project` can have many `TimeLog` entries associated with it.
     - Each `TimeLog` belongs to exactly one `Project`.
-
-## Key Fields
-
-- **User.role**: Determines access levels (RBAC). `ADMIN` has full access, `EMPLOYEE` generally has read/write access only to their own data (except projects list).
-- **Project.billingRate**: Used to calculate the cost of billable hours.
-- **TimeLog.status**: Tracks the workflow state of time entries on the Kanban board.
