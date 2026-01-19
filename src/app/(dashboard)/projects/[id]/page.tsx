@@ -41,7 +41,9 @@ export default function ProjectDetailsPage() {
     } = useInfiniteTimeLogs({ projectId: id, limit: 20 }, user?.id)
 
     const logs = useMemo(() => {
-        return logsResponse?.pages.flatMap((page) => page.data) || []
+        const allLogs = logsResponse?.pages.flatMap((page) => page.data) || []
+        // Deduplicate logs by ID to prevent duplicate key errors
+        return Array.from(new Map(allLogs.map((log) => [log.id, log])).values())
     }, [logsResponse])
 
     const { data: billing } = useBillingSummary(isAdmin ? id : '')

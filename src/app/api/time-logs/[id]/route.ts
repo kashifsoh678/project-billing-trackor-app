@@ -33,8 +33,11 @@ export const PATCH = withAuth(async (req, user, context: ApiContext) => {
     // Allow partial updates
     const validatedData = timeLogSchema.partial().parse(body);
 
-    // If updating hours or date, re-validate the 12h limit
-    if (validatedData.hours || validatedData.logDate) {
+    // If updating hours or date, re-validate the 12h limit (only for employees)
+    if (
+      user.role === "EMPLOYEE" &&
+      (validatedData.hours || validatedData.logDate)
+    ) {
       const logDate = validatedData.logDate
         ? new Date(validatedData.logDate)
         : existingLog.logDate;

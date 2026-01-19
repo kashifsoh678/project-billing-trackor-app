@@ -1,71 +1,103 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { generateToken } from "@/lib/auth";
 import { loginSchema } from "@/lib/validators";
-import { generateToken, setAuthCookie } from "@/lib/auth";
 import { verifyPassword } from "@/lib/password";
-import { Role } from "@/types";
+import { rateLimit, RateLimitPresets } from "@/lib/rate-limit";
+import {
+  addSecurityHeaders,
+  validateRequestSize,
+  validateNoSQLInjection,
+} from "@/lib/security";
+import { Role } from "@prisma/client";
 
-export async function POST(req: Request) {
+const loginRateLimiter = rateLimit(RateLimitPresets.auth);
+
+export async function POST(req: NextRequest) {
   try {
+    // Apply rate limiting
+    const rateLimitResult = loginRateLimiter(req);
+    if (rateLimitResult) {
+      return addSecurityHeaders(rateLimitResult);
+    }
+
+    // Validate request size
+    const sizeCheck = validateRequestSize(req, 10); // 10KB max for login
+    if (sizeCheck) {
+      return addSecurityHeaders(sizeCheck);
+    }
+
     const body = await req.json();
 
-    // 1. Validate Input
+    // Check for SQL injection attempts
+    const sqlCheck = validateNoSQLInjection(body);
+    if (sqlCheck) {
+      return addSecurityHeaders(sqlCheck);
+    }
+
     const validation = loginSchema.safeParse(body);
+
     if (!validation.success) {
-      return NextResponse.json(
-        { error: "Invalid input", details: validation.error.flatten() },
-        { status: 400 },
+      return addSecurityHeaders(
+        NextResponse.json(
+          { error: "Invalid credentials" }, // Don't reveal validation details
+          { status: 400 },
+        ),
       );
     }
 
     const { email, password } = validation.data;
 
-    // 2. Find User
     const user = await prisma.user.findUnique({
       where: { email },
     });
 
     if (!user) {
-      return NextResponse.json(
-        { error: "Invalid credentials" },
-        { status: 401 },
+      // Use same error message to prevent user enumeration
+      return addSecurityHeaders(
+        NextResponse.json({ error: "Invalid credentials" }, { status: 401 }),
       );
     }
 
-    // 3. Verify Password
-    const isValid = await verifyPassword(password, user.password);
+    const isPasswordValid = await verifyPassword(password, user.password);
 
-    if (!isValid) {
-      return NextResponse.json(
-        { error: "Invalid credentials" },
-        { status: 401 },
+    if (!isPasswordValid) {
+      return addSecurityHeaders(
+        NextResponse.json({ error: "Invalid credentials" }, { status: 401 }),
       );
     }
 
-    // 4. Generate Token & Set Cookie
     const token = await generateToken({
       userId: user.id,
       email: user.email,
-      role: user.role as Role,
+      role: user.role as any, // Prisma enum to app enum
     });
-    await setAuthCookie(token);
 
-    // 5. Return success (exclude password)
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password: _, ...userWithoutPassword } = user;
-
-    return NextResponse.json(
-      {
-        message: "Login successful",
-        user: userWithoutPassword,
+    const response = NextResponse.json({
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
       },
-      { status: 200 },
-    );
+    });
+
+    response.cookies.set("auth-token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+      path: "/",
+    });
+
+    return addSecurityHeaders(response);
   } catch (error) {
-    console.error("Login Error:", error);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 },
+    console.error("Login error:", error);
+    return addSecurityHeaders(
+      NextResponse.json(
+        { error: "An error occurred during login" },
+        { status: 500 },
+      ),
     );
   }
 }
