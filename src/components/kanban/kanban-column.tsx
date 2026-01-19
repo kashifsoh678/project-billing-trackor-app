@@ -26,7 +26,7 @@ const KanbanColumn = ({ id, title, count, children }: KanbanColumnProps) => {
 
     return (
         <div className="flex flex-col h-full min-h-[500px] rounded-xl border bg-muted/20">
-            <div className={cn("p-4 border-b flex items-center justify-between",
+            <div className={cn("p-4 border-b flex items-center justify-between sticky top-0 z-10 rounded-t-xl",
                 columnColors[id as keyof typeof columnColors] || columnColors.todo
             )}>
                 <div className="flex items-center gap-2">

@@ -29,8 +29,16 @@ export const GET = withAuth(async (req, user) => {
 
   // Employees can only see their own logs
   if (user.role === "EMPLOYEE") {
+    console.log(
+      `[API] Filtering logs for employee: ${user.id} (${user.email})`,
+    );
     where.userId = user.id;
   }
+
+  console.log(
+    `[API] Fetching logs with where:`,
+    JSON.stringify(where, null, 2),
+  );
 
   try {
     const [timeLogs, total] = await Promise.all([
@@ -72,7 +80,16 @@ export const GET = withAuth(async (req, user) => {
   } catch (error) {
     console.error("GET Time Logs Error:", error);
     return NextResponse.json(
-      { error: "Failed to fetch time logs" },
+      {
+        data: [],
+        meta: {
+          total: 0,
+          page: 1,
+          limit: limit,
+          totalPages: 0,
+        },
+        error: "Failed to fetch time logs",
+      },
       { status: 500 },
     );
   }

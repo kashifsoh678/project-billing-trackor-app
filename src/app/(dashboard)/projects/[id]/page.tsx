@@ -14,7 +14,7 @@ import Modal from '@/components/ui/modal'
 import { ConfirmModal } from '@/components/ui/confirm-modal'
 import { useProject } from '@/hooks/use-projects'
 import {
-    useTimeLogs,
+    useInfiniteTimeLogs,
     useCreateTimeLog,
     useUpdateTimeLog,
     useDeleteTimeLog,
@@ -32,9 +32,20 @@ export default function ProjectDetailsPage() {
     const isAdmin = user?.role === Role.ADMIN
 
     const { data: project, isLoading: isProjectLoading } = useProject(id)
-    const { data: logsResponse, isLoading: isLogsLoading } = useTimeLogs({ projectId: id, limit: 1000 })
-    const logs = useMemo(() => logsResponse?.data || [], [logsResponse])
+    const {
+        data: logsResponse,
+        isLoading: isLogsLoading,
+        hasNextPage,
+        isFetchingNextPage,
+        fetchNextPage
+    } = useInfiniteTimeLogs({ projectId: id, limit: 20 }, user?.id)
+
+    const logs = useMemo(() => {
+        return logsResponse?.pages.flatMap((page) => page.data) || []
+    }, [logsResponse])
+
     const { data: billing } = useBillingSummary(isAdmin ? id : '')
+
 
     const createLogMutation = useCreateTimeLog()
     const updateLogMutation = useUpdateTimeLog()
@@ -55,10 +66,7 @@ export default function ProjectDetailsPage() {
 
         if (!destination) return
 
-        if (
-            destination.droppableId === source.droppableId &&
-            destination.index === source.index
-        ) {
+        if (destination.droppableId === source.droppableId) {
             return
         }
 
@@ -174,6 +182,19 @@ export default function ProjectDetailsPage() {
                 {/* Kanban Board */}
                 <div className="lg:col-span-3 min-h-[500px]">
                     <KanbanBoard logs={logs} onDragEnd={onDragEnd} onEdit={handleEditLog} onDelete={handleDeleteLog} />
+
+                    {hasNextPage && (
+                        <div className="mt-8 flex justify-center pb-8">
+                            <Button
+                                variant="outline"
+                                onClick={() => fetchNextPage()}
+                                disabled={isFetchingNextPage}
+                                className="w-full md:w-64"
+                            >
+                                {isFetchingNextPage ? 'Loading more...' : 'Load More entries'}
+                            </Button>
+                        </div>
+                    )}
                 </div>
 
                 {/* Sidebar Info */}

@@ -79,7 +79,7 @@ export default function ProjectsPage() {
     }
 
     const projects = data?.data || []
-    const totalPages = data?.meta.totalPages || 0
+    const totalPages = data?.meta?.totalPages || 0
 
     return (
         <div className="space-y-8 h-full">

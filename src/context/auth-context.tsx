@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import apiClient from '@/lib/api-client';
 import { User } from '@/types';
 import { LoginInput, RegisterInput } from '@/lib/validators';
@@ -20,6 +21,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
     const router = useRouter();
+    const queryClient = useQueryClient();
 
     // Load user on mount
     useEffect(() => {
@@ -38,12 +40,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     const login = async (input: LoginInput) => {
+        queryClient.clear(); // Clear cache from previous user
         const { data } = await apiClient.post('/auth/login', input);
         setUser(data.user);
         router.push('/projects');
     };
 
     const register = async (input: RegisterInput) => {
+        queryClient.clear(); // Clear cache from previous user
         const { data } = await apiClient.post('/auth/register', input);
         setUser(data.user);
         router.push('/projects');
@@ -57,6 +61,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // Ignore errors
         } finally {
             setUser(null);
+            queryClient.clear();
             router.push('/login');
         }
     };
