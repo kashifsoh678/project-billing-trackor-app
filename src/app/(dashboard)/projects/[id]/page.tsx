@@ -42,8 +42,10 @@ export default function ProjectDetailsPage() {
 
     const logs = useMemo(() => {
         const allLogs = logsResponse?.pages.flatMap((page) => page.data) || []
-        // Deduplicate logs by ID to prevent duplicate key errors
-        return Array.from(new Map(allLogs.map((log) => [log.id, log])).values())
+        // Deduplicate logs by ID, filtering out any undefined entries first
+        return Array.from(new Map(
+            allLogs.filter(Boolean).map((log) => [log.id, log])
+        ).values())
     }, [logsResponse])
 
     const { data: billing } = useBillingSummary(isAdmin ? id : '')
