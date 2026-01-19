@@ -6,24 +6,29 @@ import { Textarea } from '@/components/ui/textarea'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm, DefaultValues } from 'react-hook-form'
 
-import { TimeLogStatus, TimeLog } from '@/types'
+import { TimeLogStatus, TimeLog, Role } from '@/types'
 import { TimeLogInput, timeLogSchema } from '@/lib/validators'
+import { useAuth } from '@/context/auth-context'
 
 type TimeLogFormValues = TimeLogInput
 
 interface TimeLogFormProps {
+    projectId: string
     initialData?: TimeLog
     onSubmit: (data: TimeLogFormValues) => void
     onCancel?: () => void
 }
 
-const TimeLogForm = ({ initialData, onSubmit, onCancel }: TimeLogFormProps) => {
+const TimeLogForm = ({ projectId, initialData, onSubmit, onCancel }: TimeLogFormProps) => {
+    const { user } = useAuth()
+    const isEmployee = user?.role === Role.EMPLOYEE
+
     const {
         register,
         handleSubmit,
         formState: { errors, isSubmitting },
     } = useForm<TimeLogFormValues>({
-        // @ts-expect-error - zodResolver type mismatch with coerce.number()
+        // @ts-expect-error - zodResolver type mismatch with coerced fields
         resolver: zodResolver(timeLogSchema),
         defaultValues: (initialData ? {
             hours: initialData.hours,
@@ -36,20 +41,22 @@ const TimeLogForm = ({ initialData, onSubmit, onCancel }: TimeLogFormProps) => {
             notes: '',
             logDate: new Date().toISOString().split('T')[0] as unknown as Date,
             status: TimeLogStatus.TODO,
+            projectId: projectId,
         }) as DefaultValues<TimeLogFormValues>,
         mode: 'onChange',
     })
 
-    // Mock submission delay
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const handleFormSubmit = async (data: any) => {
-        await new Promise((resolve) => setTimeout(resolve, 500))
+    const handleFormSubmit = (data: TimeLogFormValues) => {
         onSubmit(data)
     }
 
     return (
 
-        <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
+        <form
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            onSubmit={handleSubmit(handleFormSubmit as any)}
+            className="space-y-4"
+        >
             <div className="grid grid-cols-2 gap-4">
                 <Input
                     label="Hours"
@@ -62,6 +69,7 @@ const TimeLogForm = ({ initialData, onSubmit, onCancel }: TimeLogFormProps) => {
                 <Input
                     label="Date"
                     type="date"
+                    max={new Date().toISOString().split('T')[0]}
                     error={errors.logDate?.message}
                     required
                     {...register('logDate')}
@@ -80,12 +88,16 @@ const TimeLogForm = ({ initialData, onSubmit, onCancel }: TimeLogFormProps) => {
                 <label className="text-sm font-medium leading-none">Status</label>
                 <select
                     className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 mt-1 uppercase"
+                    disabled={isEmployee && !initialData}
                     {...register('status')}
                 >
                     <option value={TimeLogStatus.TODO}>Todo</option>
                     <option value={TimeLogStatus.IN_PROGRESS}>In Progress</option>
                     <option value={TimeLogStatus.DONE}>Done</option>
                 </select>
+                {isEmployee && !initialData && (
+                    <p className="text-[10px] text-muted-foreground mt-1">Status defaults to TODO for new logs</p>
+                )}
                 {errors.status && (
                     <p className="text-xs font-medium text-destructive">{errors.status.message}</p>
                 )}
@@ -98,10 +110,10 @@ const TimeLogForm = ({ initialData, onSubmit, onCancel }: TimeLogFormProps) => {
                     </Button>
                 )}
                 <Button type="submit" size='sm' disabled={isSubmitting}>
-                    {initialData ? 'Update Log' : 'Save Log'}
+                    {isSubmitting ? 'Processing...' : (initialData ? 'Update Log' : 'Save Log')}
                 </Button>
             </div>
-        </form>
+        </form >
 
     )
 }

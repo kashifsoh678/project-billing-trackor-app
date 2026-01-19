@@ -15,6 +15,7 @@ import { Role } from '@/types/enums'
 import { ConfirmModal } from '@/components/ui/confirm-modal'
 import { useDebounce } from '@/hooks/use-debounce'
 import { Search, X, Loader2, Filter } from 'lucide-react'
+import { ProjectSkeleton } from '@/components/projects/project-skeleton'
 
 export default function ProjectsPage() {
     const { user } = useAuth()
@@ -78,7 +79,7 @@ export default function ProjectsPage() {
     }
 
     const projects = data?.data || []
-    const totalPages = data?.meta.totalPages || 0
+    const totalPages = data?.meta?.totalPages || 0
 
     return (
         <div className="space-y-8 h-full">
@@ -161,11 +162,10 @@ export default function ProjectsPage() {
 
             <div className='flex flex-col justify-between min-h-[400px]'>
                 {isLoading ? (
-                    <div className="flex items-center justify-center h-64">
-                        <div className="flex flex-col items-center gap-4">
-                            <Loader2 className="animate-spin text-primary size-10" />
-                            <p className="text-muted-foreground animate-pulse">Loading projects...</p>
-                        </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {Array.from({ length: 6 }).map((_, i) => (
+                            <ProjectSkeleton key={i} />
+                        ))}
                     </div>
                 ) : isError ? (
                     <div className="text-center py-12 bg-destructive/5 rounded-xl border border-destructive/20 text-destructive">
