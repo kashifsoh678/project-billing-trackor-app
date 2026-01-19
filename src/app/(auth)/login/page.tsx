@@ -21,6 +21,7 @@ const LoginPage: React.FC = () => {
         register,
         handleSubmit,
         setError,
+        setValue,
         formState: { errors, isSubmitting },
     } = useForm<LoginFormValues>({
         resolver: zodResolver(loginSchema),
@@ -82,8 +83,31 @@ const LoginPage: React.FC = () => {
                             <span className="w-full border-t border-border" />
                         </div>
                         <div className="relative flex justify-center text-xs uppercase">
-                            <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
+                            <span className="bg-card px-2 text-muted-foreground">Quick Login</span>
                         </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 w-full">
+                        <Button
+                            variant="outline"
+                            onClick={() => {
+                                setValue('email', 'admin@billingtrack.com', { shouldValidate: true })
+                                setValue('password', 'Admin@123', { shouldValidate: true })
+                            }}
+                            type="button"
+                        >
+                            Admin
+                        </Button>
+                        <Button
+                            variant="outline"
+                            onClick={() => {
+                                setValue('email', 'employee@billingtrack.com', { shouldValidate: true })
+                                setValue('password', 'Employee@123', { shouldValidate: true })
+                            }}
+                            type="button"
+                        >
+                            Employee
+                        </Button>
                     </div>
                     <p className="text-center text-sm text-muted-foreground">
                         Don&apos;t have an account?{' '}

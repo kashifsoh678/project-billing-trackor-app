@@ -106,7 +106,7 @@ export default function ProjectsPage() {
 
             <div className="flex flex-col sm:flex-row items-center gap-4">
                 <div className="flex items-center gap-2 w-full max-w-sm relative group">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground size-4" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground size-4 z-10 pointer-events-none" />
                     <Input
                         placeholder="Search projects..."
                         value={searchQuery}

@@ -1,18 +1,28 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withAuth } from "@/lib/api-utils";
 import { timeLogSchema } from "@/lib/validators";
 import { startOfDay, endOfDay } from "date-fns";
 import { Prisma } from "@prisma/client";
 import { ZodError } from "zod";
+import { rateLimit, RateLimitPresets } from "@/lib/rate-limit";
+import { addSecurityHeaders, validateRequestSize } from "@/lib/security";
 
 import { TimeLogStatus } from "@/types/enums";
+
+const timeLogsReadLimiter = rateLimit(RateLimitPresets.read);
+const timeLogsWriteLimiter = rateLimit(RateLimitPresets.write);
 
 /**
  * GET /api/time-logs
  * List time logs with filters
  */
 export const GET = withAuth(async (req, user) => {
+  // Apply rate limiting for read operations
+  const rateLimitResult = timeLogsReadLimiter(req as NextRequest);
+  if (rateLimitResult) {
+    return addSecurityHeaders(rateLimitResult);
+  }
   const { searchParams } = new URL(req.url);
   const projectId = searchParams.get("projectId");
   const userId = searchParams.get("userId");
@@ -68,15 +78,17 @@ export const GET = withAuth(async (req, user) => {
       prisma.timeLog.count({ where }),
     ]);
 
-    return NextResponse.json({
-      data: timeLogs,
-      meta: {
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
-      },
-    });
+    return addSecurityHeaders(
+      NextResponse.json({
+        data: timeLogs,
+        meta: {
+          total,
+          page,
+          limit,
+          totalPages: Math.ceil(total / limit),
+        },
+      }),
+    );
   } catch (error) {
     console.error("GET Time Logs Error:", error);
     return NextResponse.json(
@@ -100,6 +112,17 @@ export const GET = withAuth(async (req, user) => {
  * Create a new time log with 12h daily limit validation
  */
 export const POST = withAuth(async (req, user) => {
+  // Apply rate limiting for write operations
+  const rateLimitResult = timeLogsWriteLimiter(req as NextRequest);
+  if (rateLimitResult) {
+    return addSecurityHeaders(rateLimitResult);
+  }
+
+  // Validate request size
+  const sizeCheck = validateRequestSize(req as NextRequest, 50); // 50KB max
+  if (sizeCheck) {
+    return addSecurityHeaders(sizeCheck);
+  }
   try {
     const body = await req.json();
     const validatedData = timeLogSchema.parse(body);
@@ -114,35 +137,39 @@ export const POST = withAuth(async (req, user) => {
     }
 
     const logDate = new Date(validatedData.logDate);
-    const dayStart = startOfDay(logDate);
-    const dayEnd = endOfDay(logDate);
 
-    // Check existing hours for this user on this day
-    const existingLogs = await prisma.timeLog.findMany({
-      where: {
-        userId: logUserId,
-        logDate: {
-          gte: dayStart,
-          lte: dayEnd,
+    // Only enforce daily limit for employees
+    if (user.role === "EMPLOYEE") {
+      const dayStart = startOfDay(logDate);
+      const dayEnd = endOfDay(logDate);
+
+      // Check existing hours for this user on this day
+      const existingLogs = await prisma.timeLog.findMany({
+        where: {
+          userId: logUserId,
+          logDate: {
+            gte: dayStart,
+            lte: dayEnd,
+          },
         },
-      },
-    });
+      });
 
-    const totalExistingHours = existingLogs.reduce(
-      (acc, log) => acc + log.hours,
-      0,
-    );
-    const newTotalHours = totalExistingHours + validatedData.hours;
-
-    if (newTotalHours > 12) {
-      return NextResponse.json(
-        {
-          error: `Daily limit exceeded. You can only log up to 12 hours per day. You have ${
-            12 - totalExistingHours
-          } hours remaining for ${logDate.toLocaleDateString()}.`,
-        },
-        { status: 400 },
+      const totalExistingHours = existingLogs.reduce(
+        (acc, log) => acc + log.hours,
+        0,
       );
+      const newTotalHours = totalExistingHours + validatedData.hours;
+
+      if (newTotalHours > 12) {
+        return NextResponse.json(
+          {
+            error: `Daily limit exceeded. You can only log up to 12 hours per day. You have ${
+              12 - totalExistingHours
+            } hours remaining for ${logDate.toLocaleDateString()}.`,
+          },
+          { status: 400 },
+        );
+      }
     }
 
     const timeLog = await prisma.timeLog.create({
@@ -153,7 +180,7 @@ export const POST = withAuth(async (req, user) => {
       },
     });
 
-    return NextResponse.json(timeLog, { status: 201 });
+    return addSecurityHeaders(NextResponse.json(timeLog, { status: 201 }));
   } catch (error) {
     console.error("POST Time Log Error:", error);
     if (error instanceof ZodError) {

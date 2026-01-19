@@ -8,7 +8,7 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
-    ({ className, label, error, type, ...props }, ref) => {
+    ({ className, label, error, type, required, ...props }, ref) => {
         const [showPassword, setShowPassword] = useState(false)
         const isPassword = type === 'password'
         const inputType = isPassword ? (showPassword ? 'text' : 'password') : type
@@ -18,7 +18,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
                 {label && (
                     <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                         {label}
-                        {props.required && <span className="text-destructive ml-1">*</span>}
+                        {required && <span className="text-destructive ml-1">*</span>}
                     </label>
                 )}
                 <div className="relative">
@@ -31,6 +31,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
                             className
                         )}
                         ref={ref}
+                        aria-required={required}
                         {...props}
                     />
                     {isPassword && (

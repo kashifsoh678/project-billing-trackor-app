@@ -62,9 +62,20 @@ const TimeLogForm = ({ projectId, initialData, onSubmit, onCancel }: TimeLogForm
                     label="Hours"
                     type="number"
                     step="0.1"
+                    min="0.1"
+                    max="12"
+                    onKeyDown={(e) => {
+                        // Prevent negative input and 'e' (scientific notation)
+                        if (e.key === '-' || e.key === 'e' || e.key === 'E') {
+                            e.preventDefault();
+                        }
+                    }}
                     error={errors.hours?.message}
                     required
-                    {...register('hours')}
+                    {...register('hours', {
+                        min: { value: 0.1, message: 'Hours must be positive' },
+                        max: { value: 12, message: 'Max 12 hours allowed' }
+                    })}
                 />
                 <Input
                     label="Date"

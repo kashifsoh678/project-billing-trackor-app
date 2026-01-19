@@ -24,7 +24,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
                             className
                         )}
                         ref={ref}
-                        required={required}
+                        aria-required={required}
                         {...props}
                     />
                 </div>
